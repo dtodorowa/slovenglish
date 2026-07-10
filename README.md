@@ -7,6 +7,7 @@ Slovenian voice. Google's TTS stack doesn't ship one. Apple's does (she's called
 **Tina** we love Tina), so this app leans on the phone's own speech engine.
 
 Also checked DeepL, it was trying to read English, it was awful(ly entertaining).
+Also checked the internet, everything looked really ugly, ngl.
 
 ## How it works
 
