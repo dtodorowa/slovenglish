@@ -11,6 +11,7 @@
 	onMount(() => speech.init());
 
 	const path = $derived(page.url.pathname);
+	const isSubpage = $derived(path !== '/');
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -20,7 +21,31 @@
 		class="flex items-center justify-between border-b border-slate-100
 		       px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2"
 	>
-		<a href="/" class="text-sm font-extrabold tracking-tight text-slate-900">Slovenglish</a>
+		{#if isSubpage}
+			<a
+				href="/"
+				aria-label="Back to translator"
+				class="-ml-2 inline-flex items-center gap-1 rounded-full py-1 pr-3 pl-2 text-sm
+				       font-semibold text-slate-900 transition active:scale-95 active:bg-slate-100"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="h-5 w-5"
+					aria-hidden="true"
+				>
+					<path d="M15 5 8 12l7 7" />
+				</svg>
+				Back
+			</a>
+		{:else}
+			<span class="text-sm font-extrabold tracking-tight text-slate-900">Slovenglish</span>
+		{/if}
 
 		<nav class="flex items-center gap-1 text-sm font-semibold">
 			<a

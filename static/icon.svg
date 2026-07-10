@@ -1,14 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-	<rect width="512" height="512" rx="112" fill="#0f172a" />
-	<text
-		x="256"
-		y="256"
-		fill="#ffffff"
-		font-family="Helvetica, Arial, sans-serif"
-		font-size="200"
-		font-weight="bold"
-		text-anchor="middle"
-		dominant-baseline="central">SL</text
-	>
-	<circle cx="256" cy="404" r="26" fill="#059669" />
+	<defs>
+		<clipPath id="round"><rect width="512" height="512" rx="112" /></clipPath>
+	</defs>
+	<g clip-path="url(#round)">
+		<!-- Two-tone split mirrors the app: English (light) over Slovenian (dark). -->
+		<rect width="512" height="256" fill="#ffffff" />
+		<rect y="256" width="512" height="256" fill="#0f172a" />
+		<!-- Emerald translate badge straddling the divide, pointing EN → SL. -->
+		<circle cx="256" cy="256" r="96" fill="#10b981" />
+		<path
+			d="M256 212 V300 M214 262 L256 304 L298 262"
+			fill="none"
+			stroke="#ffffff"
+			stroke-width="26"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		/>
+	</g>
 </svg>

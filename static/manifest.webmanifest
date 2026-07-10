@@ -1,7 +1,7 @@
 {
 	"name": "Slovenglish",
 	"short_name": "Slovenglish",
-	"description": "Type English, hear Slovenian.",
+	"description": "Yap in English, hear it back in Slovenian. Speech-to-text in, text-to-speech out.",
 	"start_url": "/",
 	"scope": "/",
 	"display": "standalone",
