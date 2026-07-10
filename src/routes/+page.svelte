@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { history } from '$lib/history.svelte';
+
 	let english = $state('');
 	let slovenian = $state('');
 	let loading = $state(false);
 	let errorMsg = $state('');
+	let menuOpen = $state(false);
 
 	let voice = $state<SpeechSynthesisVoice | null>(null);
 	let voicesLoaded = $state(false);
@@ -54,6 +57,7 @@
 				throw new Error(body?.message ?? `Translation failed (${res.status})`);
 			}
 			slovenian = (await res.json()).translation;
+			history.add(text, slovenian, Date.now());
 		} catch (e) {
 			if ((e as Error).name === 'AbortError') return;
 			errorMsg = (e as Error).message;
@@ -124,6 +128,12 @@
 	}
 
 	const missingVoice = $derived(voicesLoaded && !voice);
+
+	function openEntry(en: string, sl: string) {
+		english = en;
+		slovenian = sl; // show instantly; the debounce will re-confirm it
+		menuOpen = false;
+	}
 </script>
 
 <svelte:head>
@@ -133,13 +143,14 @@
 <main class="flex h-dvh flex-col bg-white">
 	<!-- Top half: type English -->
 	<section class="relative flex flex-1 flex-col px-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
-		<span class="text-xs font-semibold tracking-widest text-slate-400 uppercase">English</span>
+		<span class="text-[0.7rem] font-extrabold tracking-[0.25em] text-slate-400 uppercase">English</span>
 		<textarea
 			bind:value={english}
-			placeholder="Type here…"
+			placeholder="Say it…"
 			autocapitalize="sentences"
-			class="mt-2 w-full flex-1 resize-none bg-transparent pr-20 text-3xl leading-snug
-			       text-slate-900 outline-none placeholder:text-slate-300"></textarea>
+			class="mt-2 w-full flex-1 resize-none bg-transparent pr-20 text-[2.5rem] leading-[1.1]
+			       font-bold tracking-tight text-slate-900 outline-none placeholder:text-slate-300"
+		></textarea>
 
 		{#if sttSupported}
 			<!-- Mic button, mirroring the speaker below: tap to dictate English -->
@@ -172,20 +183,24 @@
 	<section
 		class="relative flex flex-1 flex-col bg-slate-900 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
 	>
-		<span class="text-xs font-semibold tracking-widest text-slate-500 uppercase">Slovenian</span>
+		<span class="text-[0.7rem] font-extrabold tracking-[0.25em] text-emerald-400/70 uppercase"
+			>Slovenian</span
+		>
 
 		<div class="flex flex-1 flex-col justify-center pr-20">
 			{#if errorMsg}
 				<p class="text-base text-red-400">{errorMsg}</p>
 			{:else if slovenian}
 				<p
-					class="text-4xl leading-snug font-semibold text-white transition-opacity"
+					class="text-[2.75rem] leading-[1.1] font-bold tracking-tight text-white transition-opacity"
 					class:opacity-40={loading}
 				>
 					{slovenian}
 				</p>
 			{:else}
-				<p class="text-2xl text-slate-600">{loading ? 'Translating…' : 'Prevod se pojavi tukaj'}</p>
+				<p class="text-3xl font-bold tracking-tight text-slate-700">
+					{loading ? 'Translating…' : 'Prevod se pojavi tukaj'}
+				</p>
 			{/if}
 		</div>
 

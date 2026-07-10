@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/* Gen-z display grotesque — quirky, characterful, big-and-bold. Drives both the
+   Tailwind `font-sans` utilities and anything inheriting from the page root. */
+@theme {
+	--font-sans:
+		'Space Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
 /* Pin the light palette: the design is a white card on a dark panel, so a
    UA dark-mode default would otherwise invert the page under it. */
 html {
