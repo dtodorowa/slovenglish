@@ -8,7 +8,7 @@
 </svelte:head>
 
 <div class="flex h-full flex-col">
-	<div class="flex-1 overflow-y-auto px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+	<div class="flex-1 overflow-y-auto px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
 		{#if store.starred.length === 0}
 			<p class="px-6 py-20 text-center leading-relaxed text-slate-400">
 				No starred phrases yet.<br />Tap the ☆ on a translation to keep it here.
