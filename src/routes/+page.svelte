@@ -1,15 +1,20 @@
 <script lang="ts">
-	import { history } from '$lib/history.svelte';
+	import { store } from '$lib/store.svelte';
+	import { speech } from '$lib/speech.svelte';
+	import StarButton from '$lib/StarButton.svelte';
 
-	let english = $state('');
-	let slovenian = $state('');
+	// A phrase queued from the Starred/History page opens here already translated.
+	const queued = store.pending;
+	store.pending = null;
+
+	let english = $state(queued?.en ?? '');
+	let slovenian = $state(queued?.sl ?? '');
 	let loading = $state(false);
 	let errorMsg = $state('');
-	let menuOpen = $state(false);
 
-	let voice = $state<SpeechSynthesisVoice | null>(null);
-	let voicesLoaded = $state(false);
-	let speaking = $state(false);
+	// Plain (non-reactive) flag: when a phrase is loaded from another page we already
+	// have its translation, so the effect skips one run instead of re-translating.
+	let skipText: string | null = queued ? queued.en.trim() || null : null;
 
 	let listening = $state(false);
 	// webkitSpeechRecognition isn't in the DOM types; keep it loosely typed.
@@ -36,6 +41,12 @@
 			return;
 		}
 
+		// Loaded from history/starred: keep the translation we already have, don't refetch.
+		if (text === skipText) {
+			skipText = null;
+			return;
+		}
+
 		const timer = setTimeout(() => translate(text), 350);
 		return () => clearTimeout(timer);
 	});
@@ -57,45 +68,13 @@
 				throw new Error(body?.message ?? `Translation failed (${res.status})`);
 			}
 			slovenian = (await res.json()).translation;
-			history.add(text, slovenian, Date.now());
+			store.add(text, slovenian, Date.now());
 		} catch (e) {
 			if ((e as Error).name === 'AbortError') return;
 			errorMsg = (e as Error).message;
 		} finally {
 			loading = false;
 		}
-	}
-
-	// Voices populate asynchronously, and on iOS often only after the first gesture.
-	$effect(() => {
-		if (!('speechSynthesis' in window)) return;
-
-		const load = () => {
-			const all = speechSynthesis.getVoices();
-			if (!all.length) return;
-			voicesLoaded = true;
-			voice = all.find((v) => v.lang.toLowerCase().startsWith('sl')) ?? null;
-		};
-
-		load();
-		speechSynthesis.addEventListener('voiceschanged', load);
-		return () => speechSynthesis.removeEventListener('voiceschanged', load);
-	});
-
-	function speak() {
-		if (!slovenian) return;
-		speechSynthesis.cancel();
-
-		const utterance = new SpeechSynthesisUtterance(slovenian);
-		utterance.lang = 'sl-SI';
-		if (voice) utterance.voice = voice;
-		utterance.rate = 0.85; // a touch slow — you're reading along to pronounce it
-
-		utterance.onstart = () => (speaking = true);
-		utterance.onend = () => (speaking = false);
-		utterance.onerror = () => (speaking = false);
-
-		speechSynthesis.speak(utterance);
 	}
 
 	function dictate() {
@@ -127,30 +106,25 @@
 		recognition.start();
 	}
 
-	const missingVoice = $derived(voicesLoaded && !voice);
-
-	function openEntry(en: string, sl: string) {
-		english = en;
-		slovenian = sl; // show instantly; the debounce will re-confirm it
-		menuOpen = false;
-	}
+	const speaking = $derived(!!slovenian && speech.speakingText === slovenian);
 </script>
 
 <svelte:head>
 	<title>Slovenglish</title>
 </svelte:head>
 
-<main class="flex h-dvh flex-col bg-white">
+<main class="flex h-full flex-col bg-white">
 	<!-- Top half: type English -->
-	<section class="relative flex flex-1 flex-col px-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
-		<span class="text-[0.7rem] font-extrabold tracking-[0.25em] text-slate-400 uppercase">English</span>
+	<section class="relative flex flex-1 flex-col px-5 pt-4">
+		<span class="text-[0.7rem] font-extrabold tracking-[0.25em] text-slate-400 uppercase"
+			>English</span
+		>
 		<textarea
 			bind:value={english}
 			placeholder="Say it…"
 			autocapitalize="sentences"
 			class="mt-2 w-full flex-1 resize-none bg-transparent pr-20 text-[2.5rem] leading-[1.1]
-			       font-bold tracking-tight text-slate-900 outline-none placeholder:text-slate-300"
-		></textarea>
+			       font-bold tracking-tight text-slate-900 outline-none placeholder:text-slate-300"></textarea>
 
 		{#if sttSupported}
 			<!-- Mic button, mirroring the speaker below: tap to dictate English -->
@@ -180,12 +154,15 @@
 	</section>
 
 	<!-- Bottom half: Slovenian translation -->
-	<section
-		class="relative flex flex-1 flex-col bg-slate-900 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
-	>
-		<span class="text-[0.7rem] font-extrabold tracking-[0.25em] text-emerald-400/70 uppercase"
-			>Slovenian</span
-		>
+	<section class="relative flex flex-1 flex-col bg-slate-900 px-5 pt-4 pb-5">
+		<div class="flex items-center justify-between">
+			<span class="text-[0.7rem] font-extrabold tracking-[0.25em] text-emerald-400/70 uppercase"
+				>Slovenian</span
+			>
+			{#if slovenian}
+				<div class="-mt-1 -mr-2"><StarButton en={english} sl={slovenian} /></div>
+			{/if}
+		</div>
 
 		<div class="flex flex-1 flex-col justify-center pr-20">
 			{#if errorMsg}
@@ -204,7 +181,7 @@
 			{/if}
 		</div>
 
-		{#if missingVoice}
+		{#if speech.missingVoice}
 			<p class="mb-2 rounded-lg bg-amber-950/60 p-3 text-xs leading-relaxed text-amber-200">
 				No Slovenian voice on this device. Install one under Settings → Accessibility → Spoken
 				Content → Voices → Slovenian, then reload.
@@ -213,13 +190,12 @@
 
 		<!-- Speaker button, tucked into the bottom-right corner -->
 		<button
-			onclick={speak}
+			onclick={() => speech.speak(slovenian)}
 			disabled={!slovenian}
 			aria-label="Speak translation"
-			class="absolute right-5 bottom-[max(1.25rem,env(safe-area-inset-bottom))] flex h-16 w-16
-			       items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg
-			       transition active:scale-95 disabled:bg-slate-700 disabled:text-slate-500
-			       disabled:shadow-none"
+			class="absolute right-5 bottom-5 flex h-16 w-16 items-center justify-center rounded-full
+			       bg-emerald-500 text-white shadow-lg transition active:scale-95 disabled:bg-slate-700
+			       disabled:text-slate-500 disabled:shadow-none"
 			class:animate-pulse={speaking}
 		>
 			<svg
