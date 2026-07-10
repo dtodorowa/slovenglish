@@ -115,7 +115,7 @@
 
 <main class="flex h-full flex-col bg-white">
 	<!-- Top half: type English -->
-	<section class="relative flex flex-1 flex-col px-5 pt-4">
+	<section class="relative flex flex-1 flex-col px-5 pt-[max(1rem,env(safe-area-inset-top))]">
 		<span class="text-[0.7rem] font-extrabold tracking-[0.25em] text-slate-400 uppercase"
 			>English</span
 		>

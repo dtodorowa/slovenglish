@@ -17,16 +17,23 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div class="flex h-dvh flex-col bg-white">
-	<header
-		class="flex items-center justify-between border-b border-slate-100
-		       px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2"
+	<div class="min-h-0 flex-1 overflow-hidden">
+		{@render children()}
+	</div>
+
+	<!-- Always-visible bottom bar, styled as an extension of the dark Slovenian
+	     panel. On the translator it holds the Starred/History pills; on a subpage
+	     it collapses to a single Back control. -->
+	<nav
+		class="flex items-center justify-center gap-2 bg-slate-900 px-4 pt-2.5
+		       pb-[max(0.625rem,env(safe-area-inset-bottom))] text-sm font-semibold"
 	>
 		{#if isSubpage}
 			<a
 				href="/"
 				aria-label="Back to translator"
-				class="-ml-2 inline-flex items-center gap-1 rounded-full py-1 pr-3 pl-2 text-sm
-				       font-semibold text-slate-900 transition active:scale-95 active:bg-slate-100"
+				class="inline-flex items-center gap-1 rounded-full py-1.5 pr-5 pl-4 text-slate-200
+				       transition active:scale-95 active:bg-slate-800"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -41,41 +48,28 @@
 				>
 					<path d="M15 5 8 12l7 7" />
 				</svg>
-				Back
+				Translate
 			</a>
 		{:else}
-			<span class="text-sm font-extrabold tracking-tight text-slate-900">Slovenglish</span>
-		{/if}
-
-		<nav class="flex items-center gap-1 text-sm font-semibold">
 			<a
 				href="/starred"
-				class="inline-flex items-center rounded-full px-3 py-1 transition"
-				class:bg-amber-100={path === '/starred'}
-				class:text-amber-700={path === '/starred'}
-				class:text-slate-400={path !== '/starred'}
+				class="inline-flex items-center rounded-full px-5 py-1.5 text-slate-300
+				       transition active:scale-95 active:bg-slate-800"
 			>
 				<span>Starred</span>
 				{#if store.starred.length}
 					<span
-						class="ml-1.5 rounded-full bg-amber-200 px-1.5 text-xs font-bold tabular-nums text-amber-800"
+						class="ml-1.5 rounded-full bg-amber-400 px-1.5 text-xs font-bold tabular-nums text-slate-900"
 						>{store.starred.length}</span
 					>
 				{/if}
 			</a>
 			<a
 				href="/history"
-				class="rounded-full px-3 py-1 transition"
-				class:bg-slate-900={path === '/history'}
-				class:text-white={path === '/history'}
-				class:text-slate-400={path !== '/history'}
+				class="rounded-full px-5 py-1.5 text-slate-300 transition active:scale-95 active:bg-slate-800"
 			>
 				History
 			</a>
-		</nav>
-	</header>
-
-	<div class="min-h-0 flex-1 overflow-hidden">
-		{@render children()}
-	</div>
+		{/if}
+	</nav>
 </div>
