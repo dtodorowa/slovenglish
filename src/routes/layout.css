@@ -1,0 +1,8 @@
+@import 'tailwindcss';
+
+/* Pin the light palette: the design is a white card on a dark panel, so a
+   UA dark-mode default would otherwise invert the page under it. */
+html {
+	color-scheme: light;
+	background: white;
+}
